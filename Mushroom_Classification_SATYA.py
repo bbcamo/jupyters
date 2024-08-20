@@ -132,15 +132,57 @@ high_missing_columns = df_train.columns[df_train.isna().mean() > missing_thresho
 
 df_train = df_train.drop(columns=high_missing_columns)
 df_test = df_test.drop(columns=high_missing_columns)
-
-
-# +
-# target = 'class'
 # -
+
+
+target = 'class'
 
 # 17 columns have missing value at leat one
 for column in df_train.columns:
     if df_train[column].isna().any():
         print(column)
+
+# +
+#for column in df_train.columns:
+#    if df_train[column].isna().any():
+#        if df_train[column].dtype == 'object':
+#            mode_value = df_train[column].mode()[0]
+#           df_trainn = df_train.fillna(mode_value)   -> 이렇게 하면 순회하는 첫 컬럼의 최빈값으로 모든 NaN값이 대체됨
+#            df_testt = df_test.fillna(mode_value)
+#        else:
+#            mode_value = df_train[column].median()
+#            df_trainn = df_train.fillna(mode_value)
+#            df_testt = df_test.fillna(mode_value)
+# -
+
+for column in df_train.columns:
+    if df_train[column].isna().any():
+        if df_train[column].dtype == 'object':
+            mode_value = df_train[column].mode()[0]
+            df_train[column] = df_train[column].fillna(mode_value)
+            df_test[column] = df_test[column].fillna(mode_value)
+        else:
+            median_value = df_train[column].median()
+            df_train[column] = df_train[column].fillna(median_value)
+            df_test[column] = df_test[column].fillna(median_value)
+
+# +
+from dython.nominal import associations
+
+associations_df = associations(df_train[:10000], nominal_columns='all', plot=False)
+corr_matrix = associations_df['corr']
+
+plt.figure(figsize=(20,8))
+plt.gcf().set_facecolor('#FFFDD0')
+sns.heatmap(corr_matrix, annot=True, fmt='.2f', cmap='coolwarm', linewidths=.5)
+plt.title('Correlation Matrix including Categorical Features')
+
+# +
+import plotly.express as px
+
+df_train0 = df_train[:10000].copy()
+c = df_train0.groupby(['cap-shape', 'cap-color']).size().reset_index(name='count')
+c
+# -
 
 
